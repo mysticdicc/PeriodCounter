@@ -1,0 +1,87 @@
+﻿@inject FirebaseAuthClient AuthClient
+@inject NavigationManager NavManager
+@page "/signup"
+
+<div class="login_outside">
+    <div class="login_center">
+        <div class="login_header_text">
+            <b>Register</b>
+        </div>
+        <div class="login_box">
+            <div class="login_center">
+                <div class="login_text">
+                    Username
+                </div>
+                <input @bind-Value="@displayName" @bind-Value:event="oninput" class="login_input" />
+
+                <div class="login_text">
+                    Email
+                </div>
+                <input @bind-Value="@email" @bind-Value:event="oninput" class="login_input" />
+
+                <div class="login_text">
+                    Password
+                </div>
+                <input @bind-Value="@password" @bind-Value:event="oninput" class="login_input" />
+
+                <div class="login_button_row">
+                    <button class="login_button" onclick="@(() => GoToSignIn())">Log In</button>
+                    <div style="width: 2rem" />
+                    <button class="login_button" onclick="@(() => SignUpToFirebase())">Register</button>
+                </div>
+
+                @if (null != error) 
+                {
+                    <div class="login_error">
+                        @error
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+    private string? email;
+    private string? password;
+    private string? displayName;
+    private string? error;
+
+    async Task SignUpToFirebase() 
+    {
+        error = null;
+
+        if (null != (email ?? password ?? displayName)) 
+        {
+            if (PasswordMeetsRequirements(password!)) 
+            {
+                await AuthClient.CreateUserWithEmailAndPasswordAsync(email!, password!, displayName!);
+                NavManager.NavigateTo("/");
+            }
+            else
+            {
+                error = "Password does not meet complexity requirements";
+            }
+        }
+    }
+
+    bool PasswordMeetsRequirements(string password) 
+    {
+        Regex passRequirements = new("/^(?=.*?[A-Z])(?=.*?[a-z])(?=.*?[0-9])(?=.*?[#?!@$%^&*-]).{10,}$/");
+        var match = passRequirements.Matches(password);
+
+        if (null != match) 
+        {
+            return true;
+        }
+        else
+        {
+            return false;
+        }
+    }
+
+    void GoToSignIn()
+    {
+        NavManager.NavigateTo("/signin");
+    }
+}

@@ -1,0 +1,49 @@
+﻿@inject FirebaseAuthClient AuthClient
+@inject NavigationManager NavManager
+@page "/signin"
+
+<div class="login_outside">
+    <div class="login_center">
+        <div class="login_header_text">
+            <b>Login</b>
+        </div>
+        <div class="login_box">
+            <div class="login_center">
+                <div class="login_text">
+                    Email
+                </div>
+                <input @bind-Value="@email" @bind-Value:event="oninput" class="login_input" />
+
+                <div class="login_text">
+                    Password
+                </div>
+                <input @bind-Value="@password" @bind-Value:event="oninput" class="login_input" />
+
+                <div class="login_button_row">
+                    <button class="login_button" onclick="@(() => GoToSignUp())">Register</button>
+                    <div style="width: 10%;" />
+                    <button class="login_button" onclick="@(() => SignInToFirebase())">Log In</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+    private string? email;
+    private string? password;
+
+    async Task SignInToFirebase() 
+    {
+        if (null != (email ?? password)) 
+        {
+            await AuthClient.SignInWithEmailAndPasswordAsync(email!, password!);
+            NavManager.NavigateTo("/");
+        }
+    }
+
+    void GoToSignUp()
+    {
+        NavManager.NavigateTo("/signup");
+    }
+}

@@ -1,0 +1,151 @@
+﻿@inject PeriodAPI PeriodAPI
+@inject FirebaseAuthClient AuthClient
+@inject NavigationManager NavManager
+@page "/"
+
+
+<div class="home">
+    <div class="home_header">
+        <button class="home_header_button" onclick="@(() => ResetTimer())">
+            Reset Counter
+        </button>
+    </div>
+    <div class="home_body">
+        <div class="home_body_counter">
+            <div class="home_body_counter_inside">
+                <div style="margin: auto; display: block;">
+                    <div class="counter_text">
+                        <b>@Convert.ToInt32(daysSinceLastSubmit)</b>
+                    </div>
+                    <div style="color: white; width: 100%; font-size: 18px; text-align: center;">
+                        Days Since Last Period Started
+                    </div>
+                    <div style="color: white; width: 100%; text-align: center; font-size: 14px;">
+                        @lastReset.ToString("dd/MM/yyyy")
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+    DateTime lastReset;
+    double daysSinceLastSubmit;
+    static IDispatcherTimer? timer;
+
+    async protected override Task OnInitializedAsync()
+    {
+        if (AuthClient.User == null) 
+        {
+            NavManager.NavigateTo("/signin");
+        }
+
+        await base.OnInitializedAsync();
+    }
+
+    async protected override Task OnAfterRenderAsync(bool firstRender)
+    {
+        base.OnAfterRender(firstRender);
+
+        if (firstRender) {
+            PermissionStatus status = await Permissions.CheckStatusAsync<Permissions.PostNotifications>();
+            if (!(status == PermissionStatus.Granted))
+            {
+                await Permissions.RequestAsync<Permissions.PostNotifications>();
+            }
+
+            AuthClient.AuthStateChanged += LoginCheck;
+
+            await CrossFirebaseCloudMessaging.Current.CheckIfValidAsync();
+            var fcmToken = await CrossFirebaseCloudMessaging.Current.GetTokenAsync();
+
+            await GetLastSubmit();
+
+            var deviceReg = new DeviceRegistration(AuthClient.User!.Uid, fcmToken);
+            await PeriodAPI.DeviceRegister(deviceReg, await AuthClient.User.GetIdTokenAsync());
+
+            StartTimer();
+        }
+    }
+
+    void LoginCheck(object? sender, UserEventArgs eventArgs)
+    {
+        if (eventArgs.User == null)
+        {
+            NavManager.NavigateTo("/signin");
+        }
+    }
+
+    void StartTimer()
+    {
+        if (null != Application.Current) 
+        {
+            try
+            {
+                timer = Application.Current.Dispatcher.CreateTimer();
+                timer.Interval = TimeSpan.FromSeconds(30);
+                timer.Tick += new EventHandler(GetLastSubmit);
+                timer.Start();
+            } 
+            catch(Exception ex)
+            {
+                Console.WriteLine(ex.ToString());
+            }
+        }
+    }
+
+    async Task GetLastSubmit()
+    {
+        Console.WriteLine("Get last submit");
+
+        try
+        {
+            var lastTime = await PeriodAPI.GetLast(await AuthClient.User.GetIdTokenAsync());
+            lastReset = lastTime.StartTime;
+            var timeSpan = DateTime.Now - lastReset;
+            daysSinceLastSubmit = (timeSpan.TotalDays);
+            StateHasChanged();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine(ex.ToString());
+        }
+    }
+
+    async void GetLastSubmit(object? sender, EventArgs e)
+    {
+        Console.WriteLine("Get last submit timer");
+
+        try
+        {
+            var lastTime = await PeriodAPI.GetLast(await AuthClient.User.GetIdTokenAsync());
+            lastReset = lastTime.StartTime;
+            var timeSpan = lastReset - DateTime.Now;
+            daysSinceLastSubmit = (timeSpan.TotalDays);
+            StateHasChanged();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine(ex.ToString());
+        }
+    }
+
+    async Task ResetTimer() 
+    {
+        Console.WriteLine("Post new");
+
+        try
+        {
+            var newStartTime = new PeriodStartTime(AuthClient.User.Uid);
+            await PeriodAPI.PostNew(newStartTime, await AuthClient.User.GetIdTokenAsync());
+            await GetLastSubmit();
+        } 
+        catch (Exception ex)
+        {
+            Console.WriteLine(ex.ToString());
+        }
+    }
+
+
+}

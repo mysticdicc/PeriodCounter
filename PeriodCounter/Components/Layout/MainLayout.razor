@@ -1,0 +1,25 @@
+﻿@inherits LayoutComponentBase
+@inject FirebaseAuthClient AuthClient
+@inject NavigationManager NavManager
+
+<div style="width: 100vw; height: 100vh; flex-flow: column; display: flex;">
+    <div class="header">
+        @if (null != AuthClient.User) 
+        {
+            <button class="login_button" onclick="@(() => SignOut())">
+                Sign Out
+            </button>
+        }
+    </div>
+    <main class="body">
+        @Body
+    </main>
+</div>
+
+
+@code {
+    void SignOut()
+    {
+        AuthClient.SignOut();
+    }
+}
