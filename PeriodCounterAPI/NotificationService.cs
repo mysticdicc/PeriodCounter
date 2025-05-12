@@ -39,33 +39,37 @@ namespace PeriodCounterAPI
             { 
                 foreach (var device in devices)
                 {
-                    var result = db.StartTimes.Where(x => x.UserId == device.UserId).OrderByDescending(x => x.StartTime).First();
+                    var resultList = db.StartTimes.Where(x => x.UserId == device.UserId).OrderByDescending(x => x.StartTime).ToList();
 
-                    if (null != result)
-                    {
-                        var curTime = DateTime.Now;
-                        var timespan = TimeSpan.FromDays(25);
-                        var diff = curTime - result.StartTime;
+                    if (resultList.Count > 0) {
+                        var result = resultList.First();
 
-                        if (diff > timespan)
+                        if (null != result)
                         {
-                            var message = new Message()
-                            {
-                                Notification = new Notification()
-                                {
-                                    Title = "Period Alert",
-                                    Body = $"It has been {diff.Days} days since your last period"
-                                },
-                                Token = device.Fcm
-                            };
+                            var curTime = DateTime.Now;
+                            var timespan = TimeSpan.FromDays(25);
+                            var diff = curTime - result.StartTime;
 
-                            try
+                            if (diff > timespan)
                             {
-                                await messaging.SendAsync(message);
-                            } 
-                            catch(Exception ex)
-                            {
-                                Console.WriteLine(ex.Message);
+                                var message = new Message()
+                                {
+                                    Notification = new Notification()
+                                    {
+                                        Title = "Period Alert",
+                                        Body = $"It has been {diff.Days} days since your last period"
+                                    },
+                                    Token = device.Fcm
+                                };
+
+                                try
+                                {
+                                    await messaging.SendAsync(message);
+                                }
+                                catch (Exception ex)
+                                {
+                                    _logger.LogError(ex.ToString());
+                                }
                             }
                         }
                     }

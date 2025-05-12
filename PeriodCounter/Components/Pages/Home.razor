@@ -5,8 +5,9 @@
 
 
 <div class="home">
+    <ResetPopUp @bind-PopupHidden="@popupHidden"/>
     <div class="home_header">
-        <button class="home_header_button" onclick="@(() => ResetTimer())">
+        <button class="home_header_button" onclick="@(() => OnClickReset())">
             Reset Counter
         </button>
     </div>
@@ -42,6 +43,7 @@
     double daysSinceLastSubmit;
     static IDispatcherTimer? timer;
     bool counterHidden = true;
+    bool popupHidden = true;
 
     async protected override Task OnInitializedAsync()
     {
@@ -94,7 +96,8 @@
             {
                 timer = Application.Current.Dispatcher.CreateTimer();
                 timer.Interval = TimeSpan.FromSeconds(30);
-                timer.Tick += new EventHandler(GetLastSubmit);
+                timer.Tick -= GetLastSubmit;
+                timer.Tick += GetLastSubmit;
                 timer.Start();
             } 
             catch(Exception ex)
@@ -110,21 +113,24 @@
 
         try
         {
-            var lastTime = await PeriodAPI.GetLast(await AuthClient.User.GetIdTokenAsync());
-
-            if (null != lastTime) 
+            if (null != AuthClient.User) 
             {
-                lastReset = lastTime.StartTime;
-                var timeSpan = DateTime.Now - lastReset;
-                daysSinceLastSubmit = (timeSpan.TotalDays);
-                counterHidden = false;
-            }
-            else
-            {
-                counterHidden = true;
-            }
+                var lastTime = await PeriodAPI.GetLast(await AuthClient.User.GetIdTokenAsync());
 
-            StateHasChanged();
+                if (null != lastTime)
+                {
+                    lastReset = lastTime.StartTime;
+                    var timeSpan = DateTime.Now - lastReset;
+                    daysSinceLastSubmit = (timeSpan.TotalDays);
+                    counterHidden = false;
+                }
+                else
+                {
+                    counterHidden = true;
+                }
+
+                StateHasChanged();
+            }
         }
         catch (Exception ex)
         {
@@ -146,21 +152,8 @@
         }
     }
 
-    async Task ResetTimer() 
+    void OnClickReset()
     {
-        Console.WriteLine("Post new");
-
-        try
-        {
-            var newStartTime = new PeriodStartTime(AuthClient.User.Uid);
-            await PeriodAPI.PostNew(newStartTime, await AuthClient.User.GetIdTokenAsync());
-            await GetLastSubmit();
-        } 
-        catch (Exception ex)
-        {
-            Console.WriteLine(ex.ToString());
-        }
+        popupHidden = false;
     }
-
-
 }

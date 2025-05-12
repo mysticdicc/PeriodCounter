@@ -1,0 +1,87 @@
+﻿@inject PeriodAPI PeriodAPI
+@inject FirebaseAuthClient AuthClient
+
+<div class="popup_back" hidden="@_popupHidden">
+    <div class="popup_center">
+        @if (null != StartTime) 
+        {
+            <div class="popup_row">
+                <div class="popup_text_display">
+                    <div style="margin: auto; padding-top: 0.3rem; padding-bottom: 0.3rem;">
+                        @StartTime.StartTime.ToString("dd/MM/yyyy")
+                    </div>
+                </div>
+            </div>
+            <div class="popup_row">
+                <span class="material-icons login_vis_button" onclick="@(() => OnClickLeftArrow())">chevron_left</span>
+                <div class="popup_text_display">
+                    <div style="margin: auto; padding-top: 0.3rem; padding-bottom: 0.3rem; padding-left: 1rem; padding-right: 1rem;">
+                        @StartTime.PainRating
+                    </div>
+                </div>
+                <span class="material-icons login_vis_button" onclick="@(() => OnClickRightArrow())">chevron_right</span>
+            </div>
+            <div class="popup_row">
+                <button class="login_button" onclick="@(() => ResetTimer())">
+                    Submit
+                </button>
+            </div>
+        }
+    </div>
+</div>
+
+@code {
+    PeriodStartTime? StartTime;
+    [Parameter] public required bool PopupHidden { get; set; }
+    [Parameter] public required EventCallback<bool> PopupHiddenChanged { get; set; }
+    bool _popupHidden;
+
+    protected override Task OnParametersSetAsync()
+    {
+        StartTime = new PeriodStartTime(AuthClient.User.Uid);
+        _popupHidden = PopupHidden;
+        return base.OnParametersSetAsync();
+    }
+
+    async Task ResetTimer()
+    {
+        if (null != StartTime) 
+        {
+            Console.WriteLine("Post new");
+
+            try
+            {
+                await PeriodAPI.PostNew(StartTime, await AuthClient.User.GetIdTokenAsync());
+                await PopupHiddenChanged.InvokeAsync(true);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.ToString());
+            }
+        }
+    }
+
+    void OnClickRightArrow() 
+    {
+        if (StartTime != null) 
+        {
+            if (StartTime.PainRating < 10)
+            {
+                StartTime.PainRating++;
+                StateHasChanged();
+            }
+        }
+    }
+
+    void OnClickLeftArrow() 
+    {
+        if (StartTime != null)
+        {
+            if (StartTime.PainRating > 0)
+            {
+                StartTime.PainRating--;
+                StateHasChanged();
+            }
+        }
+    }
+}

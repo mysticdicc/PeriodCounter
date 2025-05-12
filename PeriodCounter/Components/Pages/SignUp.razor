@@ -12,18 +12,23 @@
                 <div class="login_text">
                     Username
                 </div>
-                <input @bind-Value="@displayName" @bind-Value:event="oninput" class="login_input" />
+                <div class="login_input_row">
+                    <input @bind-Value="@displayName" @bind-Value:event="oninput" class="login_input" />
+                </div>
 
                 <div class="login_text">
                     Email
                 </div>
-                <input @bind-Value="@email" @bind-Value:event="oninput" class="login_input" />
+                <div class="login_input_row">
+                    <input @bind-Value="@email" @bind-Value:event="oninput" class="login_input" />
+                </div>
 
                 <div class="login_text">
                     Password
                 </div>
-                <div style="display: flex;">
-                    <input @bind-Value="@password" @bind-Value:event="oninput" class="login_input" type="password" />
+                <div class="login_input_row">
+                    <input @bind-Value="@password" @bind-Value:event="oninput" class="login_input" type="@passInputType" />
+                    <span class="material-icons login_vis_button" onclick="@(() => passVisibleToggle())">visibility</span>
                 </div>
 
                 <div class="login_button_row">
@@ -48,6 +53,21 @@
     private string? password;
     private string? displayName;
     private string? error;
+
+    private string passInputType = "password";
+
+    void passVisibleToggle()
+    {
+        if (passInputType == "password")
+        {
+            passInputType = "text";
+        }
+        else if (passInputType == "text")
+        {
+            passInputType = "password";
+        }
+        StateHasChanged();
+    }
 
     async Task SignUpToFirebase() 
     {

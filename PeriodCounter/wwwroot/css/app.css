@@ -180,8 +180,8 @@
     background-color: #543844;
     border-color: black;
     border-width: 2px;
-    margin-bottom: 1rem;
     border-style: solid;
+    box-shadow: 0 0 5px rgba(0,0,0,0.5);
 }
 
 .login_error {
@@ -191,4 +191,71 @@
     font-size: 14px;
     padding-top: 1rem;
     padding-bottom: 1rem;
+}
+
+.login_input_row {
+    display: inline-flex;
+    width: 100%;
+    margin-bottom: 1rem;
+}
+
+.login_vis_button {
+    color: white;
+    padding: 5px;
+    font-size: 24px;
+    background-color: #543844;
+    border-color: black;
+    border-width: 2px;
+    border-style: solid;
+    border-radius: 0.4rem;
+    margin-top: auto;
+    margin-bottom: auto;
+    margin-left: 5px;
+    margin-right: 5px;
+    box-shadow: 0 0 5px rgba(0,0,0,0.5);
+}
+
+    .login_vis_button:hover {
+        color: grey;
+        background-color: #3d2831;
+    }
+
+.popup_center {
+    margin: auto;
+    padding: 1rem;
+}
+
+.popup_back {
+    width: 70vw;
+    height: 30\vh;
+    display: flex;
+    background-color: #661F40;
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 50%;
+    box-shadow: 0 0 200px rgba(0,0,0,0.5);
+    border-radius: 1rem;
+    border-width: 2px;
+    border-style: solid;
+    border-color: black;
+}
+
+.popup_text_display {
+    border-radius: 0.5rem;
+    border-color: black;
+    border-width: 2px;
+    border-style: solid;
+    background-color: #543844;
+    width: 100%;
+    color: white;
+    box-shadow: 0 0 5px rgba(0,0,0,0.5);
+    display: flex;
+}
+
+.popup_row {
+    width: 100%;
+    display: flex;
+    padding: 0.5rem;
 }
