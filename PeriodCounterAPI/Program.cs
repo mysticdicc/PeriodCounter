@@ -48,6 +48,24 @@ namespace PeriodCounterAPI
             app.UseAuthentication();
             app.UseAuthorization();
 
+            app.MapGet("/get/all",
+            [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
+            (HttpContext httpContext, IDbContextFactory<PeriodDb> _PeriodDb) =>
+            {
+                try
+                {
+                    using var db = _PeriodDb.CreateDbContext();
+                    var idClaim = httpContext.User.Claims.First(x => x.Type == "user_id");
+                    var result = db.StartTimes.Where(x => x.UserId == idClaim.Value).OrderByDescending(x => x.StartTime).ToList();
+                    return Results.Ok(result);
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine(ex.ToString());
+                    return Results.Problem(ex.Message);
+                }
+            });
+
             app.MapGet("/get/lastsubmitdate",
             [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
             async (HttpContext httpContext, IDbContextFactory<PeriodDb> _PeriodDb) =>

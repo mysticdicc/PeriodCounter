@@ -19,12 +19,13 @@ namespace PeriodCounter
                 CrossFirebase.Initialize(activity)));
             });
 
+#if Debug
             AppDomain.CurrentDomain.FirstChanceException += (s, e) =>
             {
                 System.Diagnostics.Debug.WriteLine("********** OMG! FirstChanceException **********");
                 System.Diagnostics.Debug.WriteLine(e.Exception);
             };
-
+#endif
             return builder;
         }
 

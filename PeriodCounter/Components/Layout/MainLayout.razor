@@ -6,14 +6,19 @@
     <div class="header">
         @if (null != AuthClient.User) 
         {
-            <img src="/img/transparent_background_icon.png" class="header_image"/>
-            <button class="login_button" onclick="@(() => SignOut())" style="margin-right: 5px !important;">
-                Sign Out
-            </button>
+            <img src="/img/transparent_background_icon.png" class="header_image" onclick="@(() => ClickHome())"/>
+            <div style="display: flex; margin-right: 5px; margin-left: auto;">
+                <button class="login_button" onclick="@(() => ClickHistory())" style="margin-right: 5px !important;">
+                    History
+                </button>
+                <button class="login_button" onclick="@(() => SignOut())" style="margin-right: 5px !important;">
+                    Sign Out
+                </button>
+            </div>
         }
         else
         {
-            <img src="/img/transparent_background_icon.png" class="header_image"/>
+            <img src="/img/transparent_background_icon.png" class="header_image" onclick="@(() => ClickHome())"/>
         }
     </div>
     <main class="body">
@@ -26,5 +31,14 @@
     void SignOut()
     {
         AuthClient.SignOut();
+    }
+
+    void ClickHome()
+    {
+        NavManager.NavigateTo("/");
+    }
+    void ClickHistory()
+    {
+        NavManager.NavigateTo("/history");
     }
 }

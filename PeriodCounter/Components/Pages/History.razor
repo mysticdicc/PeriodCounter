@@ -1,0 +1,32 @@
+﻿@inject PeriodAPI PeriodAPI
+@inject FirebaseAuthClient AuthClient
+
+@page "/history"
+
+<table style="width: 100%; color: white; text-align: center;">
+    <tr>
+        <th>Date</th>
+        <th>Pain Rating</th>
+    </tr>
+    @if (null != startTimes) 
+    {
+        @foreach (var startTime in startTimes)
+        {
+            <tr>
+                <td>@startTime.StartTime.ToString("dd/MM/yyyy")</td>
+                <td>@startTime.PainRating</td>
+            </tr>
+        }
+    }
+
+</table>
+
+@code {
+    List<PeriodStartTime>? startTimes;
+
+    async protected override Task OnInitializedAsync()
+    {
+        startTimes = await PeriodAPI.GetAll(await AuthClient.User.GetIdTokenAsync());
+        await base.OnInitializedAsync();
+    }
+}

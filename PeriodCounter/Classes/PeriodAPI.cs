@@ -14,6 +14,21 @@ namespace PeriodCounter.Classes
     {
         private readonly HttpClient _httpClient = new() { BaseAddress = new Uri(Constants.RootApiAddress)};
 
+        public async Task<List<PeriodStartTime>?> GetAll(string token)
+        {
+            _httpClient.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
+            List<PeriodStartTime>? startTime = await _httpClient.GetFromJsonAsync<List<PeriodStartTime>>($"/get/all");
+
+            if (null != startTime)
+            {
+                return startTime;
+            }
+            else
+            {
+                return null;
+            }
+        }
+
         public async Task<PeriodStartTime?> GetLast(string token)
         {
             try

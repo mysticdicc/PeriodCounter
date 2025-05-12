@@ -3,8 +3,11 @@
 
 <div class="popup_back" hidden="@_popupHidden">
     <div class="popup_center">
-        @if (null != StartTime) 
+        @if (null != StartTime)
         {
+            <div class="popup_row">
+                <span class="material-icons login_vis_button" style="background: radial-gradient(circle, rgba(138, 59, 96, 1) 0%, rgba(122, 35, 75, 1) 74%); margin-right: 0; margin-left: auto; font-size: 14px;" onclick="@(() => OnClickClose())">close</span>
+            </div>
             <div class="popup_row">
                 <div class="popup_text_display">
                     <div style="margin: auto; padding-top: 0.3rem; padding-bottom: 0.3rem;">
@@ -52,6 +55,7 @@
             try
             {
                 await PeriodAPI.PostNew(StartTime, await AuthClient.User.GetIdTokenAsync());
+                GenerateCalendarEvent();
                 await PopupHiddenChanged.InvokeAsync(true);
             }
             catch (Exception ex)
@@ -59,6 +63,11 @@
                 Console.WriteLine(ex.ToString());
             }
         }
+    }
+
+    async void OnClickClose()
+    {
+        await PopupHiddenChanged.InvokeAsync(true);
     }
 
     void OnClickRightArrow() 
@@ -82,6 +91,38 @@
                 StartTime.PainRating--;
                 StateHasChanged();
             }
+        }
+    }
+
+    void GenerateCalendarEvent()
+    {
+        if (null != StartTime)
+        {
+            var calEvent = new CalendarEvent
+            {
+                Summary = "Period Started",
+                Description = $"Period started on {StartTime.StartTime.ToString("dd/MM/yyyy")} with pain level {StartTime.PainRating}",
+                Start = new CalDateTime(StartTime.StartTime),
+                End = new CalDateTime(StartTime.StartTime).AddHours(4)
+            };
+
+            var calendar = new Calendar();
+            calendar.Events.Add(calEvent);
+            calendar.AddTimeZone(new VTimeZone("Europe/London"));
+
+            var serializer = new CalendarSerializer();
+            string icalContent = serializer.SerializeToString(calendar);
+
+            string filePath = "event.ics";
+            string file = System.IO.Path.Combine(FileSystem.CacheDirectory, filePath);
+
+            if (File.Exists(file)) {
+                File.Delete(file);
+            }
+
+            System.IO.File.WriteAllText(file, icalContent);
+
+            Launcher.Default.OpenAsync(new OpenFileRequest("Add to Calendar", new ReadOnlyFile(file))).ConfigureAwait(false);
         }
     }
 }
