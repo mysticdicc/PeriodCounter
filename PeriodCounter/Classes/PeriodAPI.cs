@@ -14,31 +14,45 @@ namespace PeriodCounter.Classes
     {
         private readonly HttpClient _httpClient = new() { BaseAddress = new Uri(Constants.RootApiAddress)};
 
-        public async Task<PeriodStartTime> GetLast(string token)
+        public async Task<PeriodStartTime?> GetLast(string token)
         {
-            _httpClient.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
-            PeriodStartTime? startTime = await _httpClient.GetFromJsonAsync<PeriodStartTime>($"/get/lastsubmitdate");
+            try
+            {
+                _httpClient.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
+                PeriodStartTime? startTime = await _httpClient.GetFromJsonAsync<PeriodStartTime>($"/get/lastsubmitdate");
 
-            if (null != startTime) 
-            {
-                return startTime;
+                if (null != startTime)
+                {
+                    return startTime;
+                }
+                else
+                {
+                    throw new Exception("null post");
+                }
             }
-            else
-            {
-                throw new Exception("null post");
-            }
+            catch { }
+
+            return null;
         }
 
         public async Task PostNew(PeriodStartTime periodStartTime, string token)
         {
-            _httpClient.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
-            await _httpClient.PostAsJsonAsync<PeriodStartTime>("/post/newdate", periodStartTime);
+            try
+            {
+                _httpClient.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
+                await _httpClient.PostAsJsonAsync<PeriodStartTime>("/post/newdate", periodStartTime);
+            }
+            catch { }
         }
 
         public async Task DeviceRegister(DeviceRegistration registration, string token)
         {
-            _httpClient.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
-            await _httpClient.PostAsJsonAsync<DeviceRegistration>("/post/newdeviceregistration", registration);
+            try
+            {
+                _httpClient.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
+                await _httpClient.PostAsJsonAsync<DeviceRegistration>("/post/newdeviceregistration", registration);
+            }
+            catch { }
         }
     }
 }

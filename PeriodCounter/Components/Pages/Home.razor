@@ -13,7 +13,7 @@
     <div class="home_body">
         <div class="home_body_counter">
             <div class="home_body_counter_inside">
-                <div style="margin: auto; display: block;">
+                <div style="margin: auto; display: block;" hidden="@counterHidden">
                     <div class="counter_text">
                         <b>@Convert.ToInt32(daysSinceLastSubmit)</b>
                     </div>
@@ -22,6 +22,14 @@
                     </div>
                     <div style="color: white; width: 100%; text-align: center; font-size: 14px;">
                         @lastReset.ToString("dd/MM/yyyy")
+                    </div>
+                </div>
+                <div style="margin: auto; display: block;" hidden="@(!counterHidden)">
+                    <div style="width: 100%; display: flex;">
+                        <img src="/img/transparent_background_icon_frown.png" style="object-fit: contain; max-height: 70%; max-width: 70%; width: auto; height: auto; margin-left: auto; margin-right: auto;" />
+                    </div>
+                    <div style="color: red; width: 100%; font-size: 25px; text-align: center; text-shadow: 0 0 2px black, 0 0 2px black, 0 0 2px black, 0 0 2px black;">
+                        <b>NO DATA</b>
                     </div>
                 </div>
             </div>
@@ -33,6 +41,7 @@
     DateTime lastReset;
     double daysSinceLastSubmit;
     static IDispatcherTimer? timer;
+    bool counterHidden = true;
 
     async protected override Task OnInitializedAsync()
     {
@@ -102,9 +111,19 @@
         try
         {
             var lastTime = await PeriodAPI.GetLast(await AuthClient.User.GetIdTokenAsync());
-            lastReset = lastTime.StartTime;
-            var timeSpan = DateTime.Now - lastReset;
-            daysSinceLastSubmit = (timeSpan.TotalDays);
+
+            if (null != lastTime) 
+            {
+                lastReset = lastTime.StartTime;
+                var timeSpan = DateTime.Now - lastReset;
+                daysSinceLastSubmit = (timeSpan.TotalDays);
+                counterHidden = false;
+            }
+            else
+            {
+                counterHidden = true;
+            }
+
             StateHasChanged();
         }
         catch (Exception ex)
@@ -119,11 +138,7 @@
 
         try
         {
-            var lastTime = await PeriodAPI.GetLast(await AuthClient.User.GetIdTokenAsync());
-            lastReset = lastTime.StartTime;
-            var timeSpan = lastReset - DateTime.Now;
-            daysSinceLastSubmit = (timeSpan.TotalDays);
-            StateHasChanged();
+            await GetLastSubmit();
         }
         catch (Exception ex)
         {

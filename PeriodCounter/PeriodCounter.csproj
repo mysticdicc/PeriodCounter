@@ -72,4 +72,13 @@
       <ProjectReference Include="..\PeriodLib\PeriodLib.csproj" />
     </ItemGroup>
 
+    <ItemGroup>
+      <Content Update="wwwroot\img\transparent_background_icon.png">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Content>
+      <Content Update="wwwroot\img\transparent_background_icon_frown.png">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Content>
+    </ItemGroup>
+
 </Project>

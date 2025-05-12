@@ -17,7 +17,7 @@
                 <div class="login_text">
                     Password
                 </div>
-                <input @bind-Value="@password" @bind-Value:event="oninput" class="login_input" />
+                <input @bind-Value="@password" @bind-Value:event="oninput" class="login_input" type="password"/>
 
                 <div class="login_button_row">
                     <button class="login_button" onclick="@(() => GoToSignUp())">Register</button>

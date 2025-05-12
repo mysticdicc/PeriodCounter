@@ -6,9 +6,14 @@
     <div class="header">
         @if (null != AuthClient.User) 
         {
-            <button class="login_button" onclick="@(() => SignOut())">
+            <img src="/img/transparent_background_icon.png" class="header_image"/>
+            <button class="login_button" onclick="@(() => SignOut())" style="margin-right: 5px !important;">
                 Sign Out
             </button>
+        }
+        else
+        {
+            <img src="/img/transparent_background_icon.png" class="header_image"/>
         }
     </div>
     <main class="body">

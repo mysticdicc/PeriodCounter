@@ -12,10 +12,22 @@
     max-height: 20%;
     display: flex;
     width: 100%;
-    box-shadow: 0 0 20px rgba(0,0,0,0.6);
+    box-shadow: 0 5px 20px rgba(0,0,0,0.6);
     border-bottom: 2px solid;
     border-color: black;
     border-top: 2px solid;
+    padding: 5px;
+}
+
+.header_image {
+    margin-left: 5px;
+    margin-right: auto;
+    margin-top: auto;
+    margin-bottom: auto;
+    object-fit: contain;
+    height: auto;
+    width: auto;
+    max-height: 5vh;
 }
 
 .home {
@@ -140,8 +152,8 @@
     border-radius: 1rem;
     margin-left: auto;
     margin-right: auto;
-    margin-top: 5px;
-    margin-bottom: 5px;
+    margin-top: auto;
+    margin-bottom: auto;
     border-color: black;
     border-style: solid;
     background: #8a3b60;

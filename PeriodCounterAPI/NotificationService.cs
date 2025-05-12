@@ -24,7 +24,7 @@ namespace PeriodCounterAPI
             _logger.LogInformation("Timed Hosted Service running.");
 
             _timer = new Timer(NotificationChecker, null, TimeSpan.Zero,
-                TimeSpan.FromSeconds(60));
+                TimeSpan.FromHours(12));
 
             return Task.CompletedTask;
         }
@@ -59,7 +59,14 @@ namespace PeriodCounterAPI
                                 Token = device.Fcm
                             };
 
-                            await messaging.SendAsync(message);
+                            try
+                            {
+                                await messaging.SendAsync(message);
+                            } 
+                            catch(Exception ex)
+                            {
+                                Console.WriteLine(ex.Message);
+                            }
                         }
                     }
                 }
