@@ -4,6 +4,7 @@ using FirebaseAdmin;
 using FirebaseAdmin.Messaging;
 using PeriodLib;
 using System.Security.Claims;
+using Microsoft.Extensions.Logging.EventLog;
 
 namespace PeriodCounterAPI
 {
@@ -21,65 +22,102 @@ namespace PeriodCounterAPI
 
         public Task StartAsync(CancellationToken stoppingToken)
         {
-            _logger.LogInformation("Timed Hosted Service running.");
+            _logger.LogWarning("Timed Hosted Service running.");
 
             _timer = new Timer(NotificationChecker, null, TimeSpan.Zero,
-                TimeSpan.FromHours(12));
+                TimeSpan.FromMinutes(2));
 
             return Task.CompletedTask;
         }
 
         private async void NotificationChecker(object? state)
         {
-            var db = _dbContextFactory.CreateDbContext();
-            List<DeviceRegistration> devices = db.DeviceRegistrations.ToList();
-            var messaging = FirebaseMessaging.DefaultInstance;
+            _logger.LogWarning("Notification service started");
 
-            if (messaging != null) 
-            { 
-                foreach (var device in devices)
+            string resultsString = String.Empty;
+
+            try
+            {
+                var db = _dbContextFactory.CreateDbContext();
+                List<DeviceRegistration> devices = db.DeviceRegistrations.ToList();
+                var messaging = FirebaseMessaging.DefaultInstance;
+
+                if (messaging != null)
                 {
-                    var resultList = db.StartTimes.Where(x => x.UserId == device.UserId).OrderByDescending(x => x.StartTime).ToList();
+                    foreach (var device in devices)
+                    {
+                        resultsString = resultsString + $"\nChecking {device.Fcm}";
 
-                    if (resultList.Count > 0) {
-                        var result = resultList.First();
+                        var curTime = DateTime.Now;
+                        var notificationDiff = curTime - device.LastNotificationSent;
+                        var notificationTimespan = TimeSpan.FromHours(24);
 
-                        if (null != result)
+                        if (notificationDiff > notificationTimespan)
                         {
-                            var curTime = DateTime.Now;
-                            var timespan = TimeSpan.FromDays(25);
-                            var diff = curTime - result.StartTime;
+                            var resultList = db.StartTimes.Where(x => x.UserId == device.UserId).OrderByDescending(x => x.StartTime).ToList();
 
-                            if (diff > timespan)
+                            if (resultList.Count > 0)
                             {
-                                var message = new Message()
-                                {
-                                    Notification = new Notification()
-                                    {
-                                        Title = "Period Alert",
-                                        Body = $"It has been {diff.Days} days since your last period"
-                                    },
-                                    Token = device.Fcm
-                                };
+                                var result = resultList.First();
 
-                                try
+                                if (null != result)
                                 {
-                                    await messaging.SendAsync(message);
-                                }
-                                catch (Exception ex)
-                                {
-                                    _logger.LogError(ex.ToString());
+                                    var timespan = TimeSpan.FromDays(25);
+                                    var diff = curTime - result.StartTime;
+
+                                    if (diff > timespan)
+                                    {
+                                        var message = new Message()
+                                        {
+                                            Notification = new Notification()
+                                            {
+                                                Title = "Period Alert",
+                                                Body = $"It has been {diff.Days} days since your last period"
+                                            },
+                                            Token = device.Fcm
+                                        };
+
+                                        try
+                                        {
+                                            await messaging.SendAsync(message);
+                                            device.LastNotificationSent = curTime;
+                                            resultsString = resultsString + $"\nMessage sent to {device.Fcm}";
+                                        }
+                                        catch (Exception ex)
+                                        {
+                                            _logger.LogError(ex.ToString());
+                                        }
+                                    }
+                                    else
+                                    {
+                                        resultsString = resultsString + $"\nMessage not sent to {device.Fcm} as hasn't been longer than 25 days";
+                                    }
                                 }
                             }
+                            else
+                            {
+                                resultsString = resultsString + $"\nCheck skipped for {device.Fcm} due to lack of results";
+                            }
+                        }
+                        else
+                        {
+                            resultsString = resultsString + $"\nCheck skipped for {device.Fcm} due to notification being sent to recently";
                         }
                     }
+                    await db.SaveChangesAsync();
                 }
+            } 
+            catch(Exception ex)
+            {
+                _logger.LogError(ex.ToString());
             }
+
+            _logger.LogWarning("Notification service finished" + resultsString);
         }
 
         public Task StopAsync(CancellationToken stoppingToken)
         {
-            _logger.LogInformation("Timed Hosted Service is stopping.");
+            _logger.LogWarning("Timed Hosted Service is stopping.");
             _timer?.Change(Timeout.Infinite, 0);
 
             return Task.CompletedTask;

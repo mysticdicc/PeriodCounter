@@ -7,6 +7,8 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using FirebaseAdmin;
 using Google.Apis.Auth.OAuth2;
+using Microsoft.Extensions.Logging.EventLog;
+using System.Diagnostics;
 
 namespace PeriodCounterAPI
 {
@@ -38,6 +40,28 @@ namespace PeriodCounterAPI
             {
                 Credential = GoogleCredential.FromFile(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "p-tracker-f9e4d-e00404272f.json")),
             });
+
+            if (OperatingSystem.IsWindows())
+            {
+                const string eventSource = "PeriodAPI Service";
+                const string logName = "Period API Logs";
+
+                // EventLog requires admin rights to create a new source
+                if (!EventLog.SourceExists(eventSource))
+                {
+                    EventLog.CreateEventSource(eventSource, logName);
+                }
+
+                builder.Logging.ClearProviders();
+
+                builder.Logging.AddEventLog(new EventLogSettings
+                {
+                    SourceName = eventSource,
+                    LogName = logName
+                });
+
+                builder.Logging.AddFilter<EventLogLoggerProvider>(eventSource, LogLevel.Information);
+            }
 
             builder.Services.AddAuthorization();
             builder.Services.AddHostedService<NotificationService>();
@@ -144,6 +168,83 @@ namespace PeriodCounterAPI
                 }
             })
             .WithName("DeviceRegistration");
+
+            app.MapPost("/delete/starttime",
+            [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
+            async (HttpContext httpContent, IDbContextFactory<PeriodDb> _PeriodDb, PeriodStartTime startTime) =>
+            {
+                try
+                {
+                    using var db = _PeriodDb.CreateDbContext();
+                    var idClaim = httpContent.User.Claims.First(x => x.Type == "user_id");
+                    var dbStartTime = db.StartTimes.Find(startTime.Id);
+
+                    if (null != dbStartTime)
+                    {
+                        if (dbStartTime.UserId == idClaim.Value)
+                        {
+                            db.Remove(dbStartTime);
+                            await db.SaveChangesAsync();
+                            return Results.Ok(startTime.Id);
+                        }
+                        else
+                        {
+                            return Results.Problem("No authority to delete");
+                        }
+                    }
+                    else
+                    {
+                        return Results.Problem("Entry not found");
+                    }
+
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine(ex.ToString());
+                    return Results.Problem(ex.Message);
+                }
+            });
+
+            app.MapPost("/delete/many/starttime",
+            [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
+            async (HttpContext httpContent, IDbContextFactory<PeriodDb> _PeriodDb, List<PeriodStartTime> startTimes) =>
+            {
+                try
+                {
+                    using var db = _PeriodDb.CreateDbContext();
+                    var idClaim = httpContent.User.Claims.First(x => x.Type == "user_id");
+
+                    foreach (var startTime in startTimes)
+                    {
+                        var dbStartTime = db.StartTimes.Find(startTime.Id);
+
+                        if (null != dbStartTime)
+                        {
+                            if (dbStartTime.UserId == idClaim.Value)
+                            {
+                                db.Remove(dbStartTime);
+                            }
+                            else
+                            {
+                                return Results.Problem("No authority to delete");
+                            }
+                        }
+                        else
+                        {
+                            return Results.Problem("Entry not found");
+                        }
+                    }
+
+                    await db.SaveChangesAsync();
+                    return Results.Ok();
+
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine(ex.ToString());
+                    return Results.Problem(ex.Message);
+                }
+            });
 
             app.Run();
         }

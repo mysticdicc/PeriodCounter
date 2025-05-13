@@ -7,5 +7,6 @@ namespace PeriodLib
         [Key]
         public string UserId { get; set; } = userId;
         public string Fcm { get; set; } = fcm;
+        public DateTime LastNotificationSent { get; set; } = DateTime.Now;
     }
 }

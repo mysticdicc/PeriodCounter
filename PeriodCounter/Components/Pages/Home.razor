@@ -75,6 +75,9 @@
             await CrossFirebaseCloudMessaging.Current.CheckIfValidAsync();
             var fcmToken = await CrossFirebaseCloudMessaging.Current.GetTokenAsync();
 
+            Console.WriteLine("======= FCM TOKEN =======");
+            Console.WriteLine(fcmToken);
+
             await GetLastSubmit();
 
             var deviceReg = new DeviceRegistration(AuthClient.User!.Uid, fcmToken);

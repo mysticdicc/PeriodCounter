@@ -60,6 +60,26 @@ namespace PeriodCounter.Classes
             catch { }
         }
 
+        public async Task DeleteStartTime(PeriodStartTime periodStartTime, string token)
+        {
+            try
+            {
+                _httpClient.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
+                await _httpClient.PostAsJsonAsync<PeriodStartTime>("/delete/starttime", periodStartTime);
+            }
+            catch { }
+        }
+
+        public async Task DeleteManyStartTime(List<PeriodStartTime> periodStartTime, string token)
+        {
+            try
+            {
+                _httpClient.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
+                await _httpClient.PostAsJsonAsync<List<PeriodStartTime>>("/delete/many/starttime", periodStartTime);
+            }
+            catch { }
+        }
+
         public async Task DeviceRegister(DeviceRegistration registration, string token)
         {
             try

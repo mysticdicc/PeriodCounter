@@ -3,30 +3,87 @@
 
 @page "/history"
 
-<table style="width: 100%; color: white; text-align: center;">
-    <tr>
-        <th>Date</th>
-        <th>Pain Rating</th>
-    </tr>
-    @if (null != startTimes) 
-    {
-        @foreach (var startTime in startTimes)
+<div style="height: 100%; width: 100%; z-index: 50; padding: 5px; margin-bottom: 5px;">
+    <div style="background-color: rgba(0,0,0,0.3); height: 100%; width: 100%; z-index: 100; position: fixed; top: 0; right: 0;" hidden="@popupHidden" />
+    <AreYouSure @bind-Hidden="@popupHidden" CallbackEvent="@((e) => ConfirmTaskCallback(e))" StartTimes="@deleteItems"/>
+    <table style="width: 100%; color: white; text-align: center; border-color: black; border-style: solid; border-width: 2px;">
+        <tr>
+            <th>Date</th>
+            <th>Pain Rating</th>
+            <th>
+                @if (null != startTimes)
+                {
+                    <button class="login_button" style="margin: 5px;" onclick="@(() => OnClickClearAll(startTimes))">Clear All</button>
+                }
+            </th>
+        </tr>
+        @if (null != startTimes)
         {
-            <tr>
-                <td>@startTime.StartTime.ToString("dd/MM/yyyy")</td>
-                <td>@startTime.PainRating</td>
-            </tr>
+            @foreach (var startTime in startTimes)
+            {
+                <tr>
+                    <td style="padding: 5px;">@startTime.StartTime.ToString("dd/MM/yyyy")</td>
+                    <td>@startTime.PainRating</td>
+                    <td>
+                        <button class="login_button" style="margin: 5px;" onclick="@(() => OnClickClear(startTime))">Clear</button>
+                    </td>
+                </tr>
+            }
         }
-    }
+    </table>
+</div>
 
-</table>
 
 @code {
     List<PeriodStartTime>? startTimes;
+    bool popupHidden = true;
+    Dictionary<Guid, bool> popupConfirmation = new();
+    List<PeriodStartTime> deleteItems = [];
 
     async protected override Task OnInitializedAsync()
     {
-        startTimes = await PeriodAPI.GetAll(await AuthClient.User.GetIdTokenAsync());
+        await RefreshHistoryList();
         await base.OnInitializedAsync();
+    }
+
+    async Task RefreshHistoryList()
+    {
+        startTimes = await PeriodAPI.GetAll(await AuthClient.User.GetIdTokenAsync());
+
+        if (null != startTimes)
+        {
+            foreach (var startTime in startTimes)
+            {
+                if (!popupConfirmation.ContainsKey(startTime.Id))
+                {
+                    popupConfirmation.Add(startTime.Id, false);
+                }
+            }
+        }
+
+        StateHasChanged();
+    }
+
+    void OnClickClear(PeriodStartTime startTime)
+    {
+        deleteItems = [];
+        deleteItems.Add(startTime);
+        popupHidden = false;
+        StateHasChanged();
+    }
+
+    void OnClickClearAll(List<PeriodStartTime> startTimes)
+    {
+        deleteItems = [];
+        deleteItems.AddRange(startTimes);
+        popupHidden = false;
+        StateHasChanged();
+    }
+
+    async Task ConfirmTaskCallback(bool callback)
+    {
+        deleteItems = [];
+        popupHidden = callback;
+        await RefreshHistoryList();
     }
 }

@@ -1,0 +1,37 @@
+﻿@inject PeriodAPI PeriodAPI
+@inject FirebaseAuthClient AuthClient
+
+<div class="confirm_back" hidden="@Hidden">
+    <div class="popup_center">
+        <div class="popup_row">
+            <div class="popup_center" style="text-align: center; color: white;">
+                Are you sure?
+            </div>
+        </div>
+        <div class="popup_row">
+            <button class="login_button" style="margin: 5px;" onclick="@(() => OnClickNo())">No</button>
+            <button class="login_button" style="margin: 5px;" onclick="@(() => OnClickYes())">Yes</button>
+        </div>
+    </div>
+</div>
+
+@code {
+    [Parameter] public required bool Hidden { get; set; }
+    [Parameter] public required EventCallback<bool> HiddenChanged { get; set; }
+
+    [Parameter] public required EventCallback<bool> CallbackEvent { get; set; }
+    [Parameter] required public List<PeriodStartTime> StartTimes { get; set; }
+
+    async void OnClickYes()
+    {
+        await PeriodAPI.DeleteManyStartTime(StartTimes, await AuthClient.User.GetIdTokenAsync());
+        await HiddenChanged.InvokeAsync(true);
+        await CallbackEvent.InvokeAsync(true);
+    }
+
+    async void OnClickNo()
+    {
+        await HiddenChanged.InvokeAsync(true);
+        await CallbackEvent.InvokeAsync(true);
+    }
+}

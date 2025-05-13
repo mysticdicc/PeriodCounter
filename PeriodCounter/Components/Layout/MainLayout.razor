@@ -2,7 +2,7 @@
 @inject FirebaseAuthClient AuthClient
 @inject NavigationManager NavManager
 
-<div style="width: 100vw; height: 100vh; flex-flow: column; display: flex;">
+<div style="width: 100vw; height: 100vh; display: flex; flex-direction: column;">
     <div class="header">
         @if (null != AuthClient.User) 
         {
